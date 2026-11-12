@@ -1,0 +1,1293 @@
+openapi: 3.0.3
+info:
+  description: "API for managing users, including creating, updating, deleting and\
+    \ manage. The API allows users to manage an user. The user must be authenticated\
+    \ to access these endpoints. The systems saves ids but when the user interacts\
+    \ with the API, they work with the actual data rather than the IDs."
+  title: Users API
+  version: 1.0.0
+servers:
+- description: Local development server for API testing and development.
+  url: http://localhost:8083
+- description: "Production server until a custom domain is available; currently, localhost\
+    \ until Practice 3"
+  url: https://localhost:8084
+tags:
+- description: Operations related to user management.
+  name: Users
+- description: Operations related to user authentication.
+  name: Authentication
+- description: Operations related to budget management.
+  name: Budget
+- description: Operations related to group management.
+  name: Groups
+paths:
+  /users:
+    delete:
+      description: Delete an user by their unique ID. The user will be removed from
+        the system. The user must be authenticated to perform this action. The group
+        'ADMIN' can delete any user.
+      operationId: deleteUser
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: User deleted successfully.
+                code: 200
+              schema:
+                $ref: "#/components/schemas/Success"
+          description: User deleted successfully.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "503":
+          content:
+            application/json:
+              example:
+                message: Service unavailable.
+                code: 503
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Service Unavailable. The server is currently unable to handle
+            the request.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Delete a user.
+      tags:
+      - Users
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+    get:
+      description: Retrieve a list of all users. Only administrators have access to
+        this endpoint. This endpoint requires the user to be authenticated. List all
+        the users in the system.
+      operationId: getUsers
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: 123e4567-e89b-12d3-a456-426614174000
+                name: John
+                email: john.doe@example.com
+                surname: Doe
+                creationDate: 2024-06-05T12:00:00Z
+              schema:
+                items:
+                  $ref: "#/components/schemas/User"
+                type: array
+          description: Successful operation. Returns a list of users.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "503":
+          content:
+            application/json:
+              example:
+                message: Service unavailable.
+                code: 503
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Service Unavailable. The server is currently unable to handle
+            the request.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Retrieve a list of users
+      tags:
+      - Users
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+    post:
+      description: |
+        Endpoint to create a new user. The request body must include the user's name, email, and password.
+      operationId: CreateUser
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: John
+              email: john.doe@example.com
+              surname: Doe
+              group: USER
+              creationDate: 2024-06-05T12:00:00Z
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              example:
+                id: 123e4567-e89b-12d3-a456-426614174000
+                name: John
+                email: john.doe@example.com
+                surname: Doe
+                creationDate: 2024-06-05T12:00:00Z
+              schema:
+                $ref: "#/components/schemas/User"
+          description: Successfull operation. User created
+        "400":
+          content:
+            application/json:
+              example:
+                message: Incorrect datas.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Incorrect datas
+        "409":
+          content:
+            application/json:
+              example:
+                message: The email is already register!
+                code: 409
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: The email is already register.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal server error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal server error. An unexpected error occurred on the
+            server.
+        "503":
+          content:
+            application/json:
+              example:
+                message: Service unavailable.
+                code: 503
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Service unavailable. The server is currently unable to handle
+            the request due to temporary overload or maintenance.
+      summary: Create a new user
+      tags:
+      - Users
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+    put:
+      description: Update an existing user's information. Only users with appropriate
+        permissions can access this endpoint. The user authentication and authorization
+        are required to access this endpoint. The user authenticated and authorized
+        will be able to update their information.
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: John
+              email: john.doe@example.com
+              surname: Doe
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: 123e4567-e89b-12d3-a456-426614174000
+                name: John
+                email: john.doe@example.com
+                surname: Doe
+                creationDate: 2024-06-05T12:00:00Z
+                group: ADMIN
+              schema:
+                $ref: "#/components/schemas/User"
+          description: User updated successfully.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "503":
+          content:
+            application/json:
+              example:
+                message: Service unavailable.
+                code: 503
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Service Unavailable. The server is currently unable to handle
+            the request.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Update an existing user.
+      tags:
+      - Users
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+  /users/profile:
+    get:
+      description: "Retrieve the profile information of the currently authenticated\
+        \ user. The user must be authenticated to access this endpoint. The endpoint\
+        \ will also communicate with the microservice Category to retrieve additional\
+        \ user information. The system will call the endpoint GET -> /category to\
+        \ obtain the necessary category details. Once the category information is\
+        \ retrieved, it will be included in the user's profile response."
+      operationId: getUserProfile
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          description: Profile retrieved successfully.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Get the profile of the authenticated user.
+      tags:
+      - Users
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+  /users/{userId}/:
+    delete:
+      description: Delete a user by their unique ID. The user will be removed from
+        the system. The user must be authenticated to perform this action. The group
+        'ADMIN' can delete any user.
+      operationId: deleteUserById
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: 123e4567-e89b-12d3-a456-426614174000
+                name: John
+                email: john.doe@example.com
+                surname: Doe
+                creationDate: 2024-06-05T12:00:00Z
+              schema:
+                $ref: "#/components/schemas/User"
+          description: User deleted successfully.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "503":
+          content:
+            application/json:
+              example:
+                message: Service unavailable.
+                code: 503
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Service Unavailable. The server is currently unable to handle
+            the request.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Delete a user by ID.
+      x-accepts:
+      - application/json
+    get:
+      description: Retrieve a user by their unique ID. The user must be authenticated
+        to perform this action. Only the user themselves or an administrator can retrieve
+        this information.
+      operationId: getUserById
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: 123e4567-e89b-12d3-a456-426614174000
+                name: John
+                email: john.doe@example.com
+                surname: Doe
+                creationDate: 2024-06-05T12:00:00Z
+                group: ADMIN
+              schema:
+                $ref: "#/components/schemas/User"
+          description: User retrieved successfully.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "503":
+          content:
+            application/json:
+              example:
+                message: Service unavailable.
+                code: 503
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Service Unavailable. The server is currently unable to handle
+            the request.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Get a user by ID.
+      x-accepts:
+      - application/json
+  /users/{userId}/password:
+    put:
+      description: Allows a user to update their password. Only the user themselves
+        or an administrator can perform this action.
+      operationId: updateUserPassword
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateUserPassword_request"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/updateUserPassword_200_response"
+          description: Password updated successfully.
+        "400":
+          content:
+            application/json:
+              example:
+                message: Invalid request parameters.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Bad Request. The request parameters are invalid.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Update user password
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /users/{userId}/budget:
+    get:
+      description: Retrieves the budget information for a specific user. Only accessible
+        by the user or an admin. It cannot be negative
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_users__userId__budget_get_200_response"
+          description: Budget retrieved successfully.
+        "400":
+          content:
+            application/json:
+              example:
+                message: Invalid request parameters.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Bad Request. The request parameters are invalid.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Get user budget
+      tags:
+      - Users
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+      - tag: Budget
+    put:
+      description: Updates the budget information for a specific user.
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_users__userId__budget_put_request"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_users__userId__budget_put_request"
+          description: Budget updated successfully.
+        "400":
+          content:
+            application/json:
+              example:
+                message: Invalid request parameters.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Bad Request. The request parameters are invalid.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Update user budget
+      tags:
+      - Budget
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Budget
+  /users/{userId}/qtyWasted:
+    patch:
+      description: "Updates the qtyWasted value for a specific user. Only authenticated\
+        \ users can update their own qtyWasted. The request body must contain the\
+        \ new qtyWasted value. Each time this endpoint is called, it will update the\
+        \ user's qtyWasted accordingly and will be called by Bills microservice."
+      operationId: updateUserQtyWasted
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+              qtyWasted: 500.0
+            schema:
+              $ref: "#/components/schemas/UpdateQtyWasted"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/updateUserQtyWasted_200_response"
+          description: qtyWasted updated successfully.
+        "400":
+          content:
+            application/json:
+              example:
+                message: Invalid request parameters.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Bad Request. The request parameters are invalid.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Update user's qtyWasted
+      tags:
+      - Users
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+  /users/{userId}/group:
+    put:
+      description: Updates the group of a specific user. Only administrators can change
+        a user's group.
+      operationId: updateUserGroup
+      parameters:
+      - description: The ID of the user.
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+              group: ADMIN
+            schema:
+              $ref: "#/components/schemas/UpdateGroupUser"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/updateUserGroup_200_response"
+          description: Group updated successfully.
+        "400":
+          content:
+            application/json:
+              example:
+                message: Invalid request parameters.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Bad Request. The request parameters are invalid.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+        "403":
+          content:
+            application/json:
+              example:
+                message: Forbidden.
+                code: 403
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Forbidden. The user does not have the necessary permissions
+            to access this endpoint.
+        "404":
+          content:
+            application/json:
+              example:
+                message: Not Found.
+                code: 404
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Not Found. The requested resource could not be found.
+        "500":
+          content:
+            application/json:
+              example:
+                message: Internal Server Error.
+                code: 500
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Internal Server Error. An unexpected error occurred on the
+            server.
+      summary: Update user's group
+      tags:
+      - Users
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Users
+      - tag: Groups
+  /users/auth/login:
+    post:
+      description: "Authenticates an user. If the users credentials are valid, a successful\
+        \ login response is returned and will redirect the user to the profile page."
+      requestBody:
+        content:
+          application/json:
+            example:
+              email: john.doe@example.com
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+          description: Login successful.
+        "400":
+          content:
+            application/json:
+              example:
+                message: Invalid request parameters.
+                code: 400
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Bad Request. The request parameters are invalid.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+      summary: User login.
+      tags:
+      - Authentication
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Authentication
+  /users/auth/logout:
+    post:
+      description: Logs out an authenticated user
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Logout successful.
+                code: 200
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+          description: Logout successful.
+        "401":
+          content:
+            application/json:
+              example:
+                message: Unauthorized.
+                code: 401
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized. The request requires user authentication.
+      summary: User logout.
+      tags:
+      - Authentication
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: Authentication
+components:
+  parameters:
+    UserId:
+      description: The ID of the user.
+      explode: false
+      in: path
+      name: userId
+      required: true
+      schema:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        format: uuid
+        type: string
+      style: simple
+  schemas:
+    User:
+      example:
+        userId: 123e4567-e89b-12d3-a456-426614174000
+        name: John
+        surname: Doe
+        email: john.doe@example.com
+        password: securepassword123
+        group: ADMIN
+        creationDate: 2024-06-05T12:00:00Z
+        budget: 1000.0
+        qtyWasted: 500.0
+      properties:
+        userId:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+          type: string
+        name:
+          example: John
+          type: string
+        surname:
+          example: Doe
+          type: string
+        email:
+          example: john.doe@example.com
+          format: email
+          type: string
+        password:
+          example: securepassword123
+          format: password
+          type: string
+        group:
+          allOf:
+          - $ref: "#/components/schemas/UserGroup"
+          example: ADMIN
+          type: object
+        creationDate:
+          example: 2024-06-05T12:00:00Z
+          format: date-time
+          type: string
+        budget:
+          example: 1000.0
+          format: float
+          type: number
+        qtyWasted:
+          example: 500.0
+          format: float
+          type: number
+      required:
+      - budget
+      - creationDate
+      - email
+      - name
+      - password
+      - qtyWasted
+      - surname
+      - userId
+      type: object
+    CreateUserRequest:
+      example:
+        name: John
+        surname: Doe
+        email: john.doe@example.com
+        password: securepassword123
+      properties:
+        name:
+          example: John
+          type: string
+        surname:
+          example: Doe
+          type: string
+        email:
+          example: john.doe@example.com
+          format: email
+          type: string
+        password:
+          example: securepassword123
+          format: password
+          type: string
+      required:
+      - email
+      - name
+      - password
+      - surname
+      type: object
+    UserGroup:
+      enum:
+      - ADMIN
+      - USER
+      example: ADMIN
+      type: string
+    UpdateGroupUser:
+      example:
+        group: ADMIN
+      properties:
+        group:
+          allOf:
+          - $ref: "#/components/schemas/UserGroup"
+          example: ADMIN
+      required:
+      - group
+      type: object
+    LoginRequest:
+      example:
+        email: john.doe@example.com
+        password: securepassword123
+      properties:
+        email:
+          example: john.doe@example.com
+          format: email
+          type: string
+        password:
+          example: securepassword123
+          format: password
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    LoginResponse:
+      example:
+        message: Login successful.
+      properties:
+        message:
+          example: Login successful.
+          type: string
+      type: object
+    LogoutResponse:
+      example:
+        email: john.doe@example.com
+      properties:
+        email:
+          example: john.doe@example.com
+          format: email
+          type: string
+      required:
+      - email
+      type: object
+    UpdateQtyWasted:
+      example:
+        qtyWasted: 250.0
+      properties:
+        qtyWasted:
+          example: 250.0
+          format: float
+          type: number
+      required:
+      - qtyWasted
+      type: object
+    Error:
+      example:
+        code: 400
+        message: Invalid request parameters.
+      properties:
+        code:
+          example: 400
+          format: int32
+          type: integer
+        message:
+          example: Invalid request parameters.
+          type: string
+      type: object
+    Success:
+      example:
+        code: 200
+        message: User deleted successfully.
+      properties:
+        code:
+          example: 200
+          format: int32
+          type: integer
+        message:
+          example: User deleted successfully.
+          type: string
+      type: object
+    updateUserPassword_request:
+      properties:
+        message:
+          example: Password updated successfully.
+          type: string
+      required:
+      - password
+      type: object
+    updateUserPassword_200_response:
+      example:
+        message: Password updated successfully.
+      properties:
+        message:
+          example: Password updated successfully.
+          type: string
+      type: object
+    _users__userId__budget_get_200_response:
+      example:
+        budget: 1000.5
+      properties:
+        budget:
+          example: 1000.5
+          format: float
+          type: number
+      type: object
+    _users__userId__budget_put_request:
+      example:
+        budget: 1500.75
+      properties:
+        budget:
+          example: 1500.75
+          format: float
+          type: number
+      type: object
+    updateUserQtyWasted_200_response:
+      example:
+        qtyWasted: 500.0
+      properties:
+        qtyWasted:
+          example: 500.0
+          format: float
+          type: number
+      type: object
+    updateUserGroup_200_response:
+      example:
+        group: ADMIN
+      properties:
+        group:
+          allOf:
+          - $ref: "#/components/schemas/UserGroup"
+          example: ADMIN
+      type: object
